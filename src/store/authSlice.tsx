@@ -9,37 +9,17 @@ type AuthSlice = {
 
 }
 
-function setCookie(name, value, days) {
-    let expires = "";
-    if (days) {
-    const date = new Date();
-      date.setTime(date.getTime() + (days  *  24  *  60  *  60  *  1000));
-      expires = "; expires=" + date.toUTCString();
-    }
-    document.cookie = name + "=" + (value || "") + expires + "; path=/";
-  }
   
-  function getCookie(name) {
-    const nameEQ = name + "=";
-    const ca = document.cookie.split(';');
-    for (let i = 0; i < ca.length; i++) {
-      let c = ca[i];
-      while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-      if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-    }
-    return null;
-  }
 
   export const setUserAuth = createAsyncThunk(
     'users/setUserAuth',
     async ({ login, password }: { login: string; password: string }, { rejectWithValue, dispatch }) => {
         try {
-            const token = getCookie('refresh');
+
             const response = await fetch('http://localhost:8888/auth/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({ login, password }),
                 credentials: 'include'
@@ -87,7 +67,6 @@ export const logoutUser = createAsyncThunk(
     'users/setUserAuth',
     async function(_,{rejectWithValue,dispatch}) {
         try{ 
-            setCookie('refresh', '', -1);
             dispatch(logout())
         }catch(e){ 
             if (e instanceof Error) return rejectWithValue(e.message)
@@ -100,19 +79,17 @@ export const checkAuth = createAsyncThunk(
     'users/checkAuth',
     async function (_,{rejectWithValue,dispatch}) {
         try{ 
-            const token = getCookie('refresh');
-            const response = await fetch('http://localhost:8888/auth/login', {
+            const response = await fetch('http://localhost:8888/token/refresh', {
                 method: 'GET',
                 headers: {
-                    credentials: 'include',
-                    Authorization: `Bearer ${token}`
+                    'Authorization': `${localStorage.getItem('token')}`
                 },
+                credentials: 'include',
             });
             if(!response.ok){
                 throw new Error('Server Error!');
                 }
             const data:Promise<AuthResponse> = await response.json();
-            setCookie('token', 'Bearer ' +(await data).token, 7);
             dispatch(setAuth((await data).user))
         }catch(e:unknown){ 
             if (e instanceof Error) return rejectWithValue(e.message)
@@ -170,7 +147,6 @@ const authSlice = createSlice({
             state.status = 'error';
             state.user = {} as IUser;
             state.isAuth = false;
-            setCookie('refresh', '', -1);
         })
         
     }
