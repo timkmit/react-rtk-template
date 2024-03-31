@@ -57,7 +57,7 @@ export const registerUser = createAsyncThunk(
     async function({login,password}:{login:string, password: string},{rejectWithValue,dispatch}) {
         try{ 
             
-            const response = await fetch('http://localhost:8888/auth/signup', {
+            let response = await fetch('http://localhost:8888/auth/signup', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -68,9 +68,21 @@ export const registerUser = createAsyncThunk(
             if(!response.ok){
                 throw new Error('Server Error!');
                 }
+
+                response = await fetch('http://localhost:8888/user/profile', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include'
+                });
+    
+                if (!response.ok) {
+                    throw new Error('Server Error!');
+                }
             
             const data:Promise<AuthResponse> = await response.json();
-            dispatch(setAuth((await data).user))
+            dispatch(setAuth((await data)))
         }catch(e){ 
             if (e instanceof Error) return rejectWithValue(e.message)
             return String(e)
@@ -93,7 +105,7 @@ export const checkAuth = createAsyncThunk(
     'users/checkAuth',
     async function (_,{rejectWithValue,dispatch}) {
         try{ 
-            const response = await fetch('http://localhost:8888/token/refresh', {
+            let response = await fetch('http://localhost:8888/token/refresh', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
@@ -103,8 +115,20 @@ export const checkAuth = createAsyncThunk(
             if(!response.ok){
                 throw new Error('Server Error!');
                 }
+
+                response = await fetch('http://localhost:8888/user/profile', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include'
+                });
+    
+                if (!response.ok) {
+                    throw new Error('Server Error!');
+                }
             const data:Promise<AuthResponse> = await response.json();
-            dispatch(setAuth((await data).user))
+            dispatch(setAuth((await data)))
         }catch(e:unknown){ 
             if (e instanceof Error) return rejectWithValue(e.message)
             return String(e)
