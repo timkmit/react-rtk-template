@@ -87,7 +87,7 @@ export const logoutUser = createAsyncThunk(
     'users/setUserAuth',
     async function(_,{rejectWithValue,dispatch}) {
         try{ 
-            setCookie('token', '', -1);
+            setCookie('refresh', '', -1);
             dispatch(logout())
         }catch(e){ 
             if (e instanceof Error) return rejectWithValue(e.message)
@@ -170,7 +170,7 @@ const authSlice = createSlice({
             state.status = 'error';
             state.user = {} as IUser;
             state.isAuth = false;
-            localStorage.removeItem('token');
+            setCookie('refresh', '', -1);
         })
         
     }
