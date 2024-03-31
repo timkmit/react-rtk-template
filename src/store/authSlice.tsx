@@ -16,7 +16,7 @@ type AuthSlice = {
     async ({ login, password }: { login: string; password: string }, { rejectWithValue, dispatch }) => {
         try {
 
-            const response = await fetch('http://localhost:8888/auth/login', {
+            let response = await fetch('http://localhost:8888/auth/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -29,9 +29,23 @@ type AuthSlice = {
                 throw new Error('Server Error!');
             }
 
-            const data: Promise<AuthResponse> = await response.json();
+            response = await fetch('http://localhost:8888/user/profile', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include'
+            });
 
-            dispatch(setAuth((await data).user));
+            if (!response.ok) {
+                throw new Error('Server Error!');
+            }
+            
+
+            const data: Promise<AuthResponse> = await response.json();
+            console.log(data)
+
+            dispatch(setAuth((await data)));
         } catch (e) {
             if (e instanceof Error) return rejectWithValue(e.message);
             return String(e);
@@ -54,7 +68,7 @@ export const registerUser = createAsyncThunk(
             if(!response.ok){
                 throw new Error('Server Error!');
                 }
-            console.log(response)
+            
             const data:Promise<AuthResponse> = await response.json();
             dispatch(setAuth((await data).user))
         }catch(e){ 
@@ -82,7 +96,7 @@ export const checkAuth = createAsyncThunk(
             const response = await fetch('http://localhost:8888/token/refresh', {
                 method: 'GET',
                 headers: {
-                    'Authorization': `${localStorage.getItem('token')}`
+                    'Content-Type': 'application/json'
                 },
                 credentials: 'include',
             });
@@ -114,7 +128,9 @@ const authSlice = createSlice({
                 const newUser = action.payload;
                 newUser.role = 'USER';
                 state.user = newUser;
+                
             }
+            console.log(action.payload)
             state.user = action.payload;
             state.status='finished';
 
@@ -126,6 +142,7 @@ const authSlice = createSlice({
     },
     extraReducers:(builder)=>{
         builder.addCase(setUserAuth.pending, (state)=>{
+            
             state.status = 'loading';
         }),
         builder.addCase(setUserAuth.fulfilled, (state)=>{
