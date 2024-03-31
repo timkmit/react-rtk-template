@@ -34,7 +34,7 @@ function setCookie(name, value, days) {
     'users/setUserAuth',
     async ({ login, password }: { login: string; password: string }, { rejectWithValue, dispatch }) => {
         try {
-            const token = getCookie('token');
+            const token = getCookie('refresh');
             const response = await fetch('http://localhost:8888/auth/login', {
                 method: 'POST',
                 headers: {
@@ -100,7 +100,7 @@ export const checkAuth = createAsyncThunk(
     'users/checkAuth',
     async function (_,{rejectWithValue,dispatch}) {
         try{ 
-            const token = getCookie('token');
+            const token = getCookie('refresh');
             const response = await fetch('http://localhost:8888/auth/login', {
                 method: 'GET',
                 headers: {
